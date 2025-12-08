@@ -1,0 +1,148 @@
+{% extends 'urls/base.html' %}
+
+{% block title %}Dashboard - URL Shortener{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: #f5f7fa;
+        padding: 20px;
+    }
+    
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    header {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    h1 {
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .stat-card h3 {
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+    
+    .stat-card .number {
+        font-size: 32px;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .url-list {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .url-item {
+        padding: 20px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .url-item:last-child {
+        border-bottom: none;
+    }
+    
+    .url-item h3 {
+        color: #667eea;
+        margin-bottom: 8px;
+    }
+    
+    .url-item .original {
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 10px;
+        word-break: break-all;
+    }
+    
+    .url-meta {
+        display: flex;
+        gap: 20px;
+        font-size: 14px;
+        color: #999;
+    }
+    
+    .nav-links {
+        margin-top: 20px;
+    }
+    
+    .nav-links a {
+        margin-right: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header>
+        <h1>My Dashboard</h1>
+        {% include 'urls/partials/messages.html' %}
+
+        <div class="nav-links">
+            <a href="/">← Home</a>
+            <a href="/api/docs/" target="_blank">API Docs</a>
+        </div>
+    </header>
+    
+    <div class="stats">
+        <div class="stat-card">
+            <h3>Total URLs</h3>
+            <div class="number">{{ total_urls }}</div>
+        </div>
+        <div class="stat-card">
+            <h3>Total Clicks</h3>
+            <div class="number">{{ total_clicks }}</div>
+        </div>
+    </div>
+    
+    <div class="url-list">
+        <div style="padding: 20px; border-bottom: 1px solid #e0e0e0;">
+            <h2>My Shortened URLs</h2>
+        </div>
+        
+        {% for url in urls %}
+        <div class="url-item">
+            <h3>{{ request.scheme }}://{{ request.get_host }}/{{ url.short_code }}/</h3>
+            <div class="original">→ {{ url.original_url }}</div>
+            <div class="url-meta">
+                <span>🖱️ {{ url.click_count }} clicks</span>
+                <span>📅 Created: {{ url.created_at|date:"M d, Y" }}</span>
+                {% if url.expires_at %}
+                <span>⏰ Expires: {{ url.expires_at|date:"M d, Y H:i" }}</span>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="url-item">
+            <p>No URLs yet. <a href="/">Create your first one!</a></p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
