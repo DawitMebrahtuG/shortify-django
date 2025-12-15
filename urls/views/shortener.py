@@ -1,8 +1,9 @@
+import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count
 from django.views.decorators.csrf import csrf_exempt
+from django.core.serializers.json import DjangoJSONEncoder
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
@@ -16,6 +17,7 @@ from urls.serializers import (
 )
 from urls.services.qrcode import generate_qr_code
 from urls.services.analytics import get_url_analytics
+from urls.services.dashboard import DashboardService
 
 def get_client_ip(request):
     """Extract client IP address from request."""
@@ -78,16 +80,13 @@ def redirect_short_url(request, short_code):
 
 @login_required
 def dashboard(request):
-    user_urls = URL.objects.filter(user=request.user).annotate(
-        click_count=Count('clicks')
+    service = DashboardService(request.user)
+    context = service.get_full_dashboard_context()
+    context['clicks_over_time'] = json.dumps(
+        context['clicks_over_time'], 
+        cls=DjangoJSONEncoder
     )
-    
-    context = {
-        'urls': user_urls,
-        'total_urls': user_urls.count(),
-        'total_clicks': sum(url.click_count for url in user_urls),
-    }
-    
+
     return render(request, 'urls/dashboard.html', context)
 
 
