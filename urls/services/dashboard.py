@@ -1,4 +1,3 @@
-# File: services/dashboard_service.py
 from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta, date
@@ -71,12 +70,14 @@ class DashboardService:
         Compute URL counts and click aggregates using as few queries as possible.
         """
 
+        # Get URL aggregates in one query
         url_agg = self._urls_qs.aggregate(
             total_urls=Count('id'),
             active_urls=Count('id', filter=Q(is_active=True) & (Q(expires_at__isnull=True) | Q(expires_at__gt=self.now))),
             expired_urls=Count('id', filter=Q(expires_at__lt=self.now)),
         )
 
+        # Get click aggregates in one query
         clicks_agg = self._clicks_qs.aggregate(
             total_clicks=Count('id'),
             unique_visitors=Count('ip_address', distinct=True),
@@ -85,6 +86,8 @@ class DashboardService:
             clicks_this_month=Count('id', filter=Q(timestamp__gte=self.month_start)),
         )
 
+        # Return aggregated results as a DashboardStats object
+        # ensure values are integers and default to 0 if not present
         return DashboardStats(
             total_urls=int(url_agg.get('total_urls') or 0),
             active_urls=int(url_agg.get('active_urls') or 0),
@@ -212,8 +215,8 @@ class DashboardService:
             self._clicks_qs
             .exclude(referrer__isnull=True)
             .exclude(referrer='')
-            .values('referrer')
-            .annotate(count=Count('id'))
+            .values('referrer') # Group by referrer field
+            .annotate(count=Count('id')) # Count number of clicks for each referrer
             .order_by('-count')[:limit]
         )
         return [{'referrer': r['referrer'], 'count': int(r['count'])} for r in qs]
