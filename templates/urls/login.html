@@ -5,54 +5,71 @@
 {% block extra_css %}
 <style>
     body {
-        background: #f5f7fa;
         min-height: 100vh;
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 20px;
+        background: 
+            radial-gradient(ellipse at top left, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+            radial-gradient(ellipse at bottom right, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+            var(--bg-dark);
     }
     
     .container {
-        background: white;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
         border-radius: 20px;
-        padding: 40px;
-        max-width: 450px;
+        padding: 48px;
+        max-width: 420px;
         width: 100%;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+    }
+    
+    .logo {
+        font-size: 48px;
+        text-align: center;
+        margin-bottom: 8px;
     }
     
     h1 {
-        color: #333;
-        margin-bottom: 10px;
+        font-size: 1.8em;
+        font-weight: 700;
         text-align: center;
-    }
-    
-    .subtitle {
-        color: #666;
-        text-align: center;
-        margin-bottom: 30px;
+        margin-bottom: 32px;
+        background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary-light) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
     
     .links {
-        margin-top: 20px;
+        margin-top: 28px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border);
         text-align: center;
     }
     
+    .links p {
+        margin-bottom: 12px;
+        color: var(--text-secondary);
+        font-size: 14px;
+    }
+    
     .links a {
-        font-weight: 500;
+        font-weight: 600;
     }
     
     .divider {
-        margin: 15px 0;
-        color: #999;
+        color: var(--text-secondary);
+        opacity: 0.5;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container">
-    <h1>Login</h1>
+    <h1>Welcome Back</h1>
     
     {% include 'urls/partials/messages.html' %}
     
@@ -66,7 +83,7 @@
         {% endif %}
         
         <div class="form-group">
-            <label for="{{ form.username.id_for_label }}">Username:</label>
+            <label for="{{ form.username.id_for_label }}">Username</label>
             {{ form.username }}
             {% if form.username.errors %}
                 <div class="error">{{ form.username.errors.0 }}</div>
@@ -74,19 +91,19 @@
         </div>
         
         <div class="form-group">
-            <label for="{{ form.password.id_for_label }}">Password:</label>
+            <label for="{{ form.password.id_for_label }}">Password</label>
             {{ form.password }}
             {% if form.password.errors %}
                 <div class="error">{{ form.password.errors.0 }}</div>
             {% endif %}
         </div>
         
-        <button type="submit">Login</button>
+        <button type="submit">Login →</button>
     </form>        
 
     <div class="links">
         <p>Don't have an account? <a href="{% url 'urls:register' %}">Register here</a></p>
-        <p class="divider">or</p>
+        <p class="divider">•</p>
         <p><a href="{% url 'urls:home' %}">← Back to Home</a></p>
     </div>
 </div>
