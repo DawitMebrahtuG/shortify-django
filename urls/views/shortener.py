@@ -13,7 +13,14 @@ from urls.models import URL, Click
 from urls.serializers import (
     URLSerializer, 
     URLCreateSerializer, 
-    URLAnalyticsSerializer
+    URLAnalyticsSerializer,
+    FullDashboardSerializer,
+    DashboardStatsSerializer,
+    URLPerformanceSerializer,
+    ReferrerSerializer,
+    RecentClickSerializer,
+    ClickTimeSeriesSerializer,
+    ClickHourlySerializer,
 )
 from urls.services.qrcode import generate_qr_code
 from urls.services.analytics import get_url_analytics
@@ -187,3 +194,87 @@ class URLViewSet(viewsets.ModelViewSet):
         short_url = request.build_absolute_uri(url_obj.get_absolute_url())
         img_bytes = generate_qr_code(short_url)
         return HttpResponse(img_bytes, content_type='image/png')
+
+    @action(detail=False, methods=['get'], url_path='dashboard')
+    def dashboard_full(self, request):
+        """Get complete dashboard analytics data."""
+        service = DashboardService(request.user)
+        data = service.get_full_dashboard_context()
+        data['stats'] = data['stats'].__dict__ # Convert dataclass to dict for serialization
+        return Response(FullDashboardSerializer(data).data)
+
+    @action(detail=False, methods=['get'], url_path='dashboard/stats')
+    def dashboard_stats(self, request):
+        """Get core dashboard statistics."""
+        service = DashboardService(request.user)
+        stats = service.get_stats()
+        return Response(DashboardStatsSerializer(stats.__dict__).data)
+    
+    @action(detail=False, methods=['get'], url_path='dashboard/top-urls')
+    def dashboard_top_urls(self, request):
+        """Get top performing URLs by click count."""
+        limit = int(request.query_params.get('limit', 10))
+        service = DashboardService(request.user)
+        data = service.get_top_urls(limit=limit)
+        return Response(URLPerformanceSerializer(data, many=True).data)
+    
+    @action(detail=False, methods=['get'], url_path='dashboard/recent-urls')
+    def dashboard_recent_urls(self, request):
+        """Get most recently created URLs."""
+        limit = int(request.query_params.get('limit', 5))
+        service = DashboardService(request.user)
+        data = service.get_recent_urls(limit=limit)
+        return Response(URLPerformanceSerializer(data, many=True).data)
+    
+    @action(detail=False, methods=['get'], url_path='dashboard/clicks-over-time')
+    def dashboard_clicks_over_time(self, request):
+        """Get click counts by date for the last N days."""
+        days = int(request.query_params.get('days', 30))
+        service = DashboardService(request.user)
+        data = service.get_clicks_over_time(days=days)
+        return Response(ClickTimeSeriesSerializer(data, many=True).data)
+    
+    @action(detail=False, methods=['get'], url_path='dashboard/clicks-by-hour')
+    def dashboard_clicks_by_hour(self, request):
+        """Get click distribution by hour of day."""
+        days = int(request.query_params.get('days', 7))
+        service = DashboardService(request.user)
+        data = service.get_clicks_by_hour(days=days)
+        return Response(ClickHourlySerializer(data, many=True).data)
+    
+    @action(detail=False, methods=['get'], url_path='dashboard/devices')
+    def dashboard_devices(self, request):
+        """Get click counts by device type."""
+        service = DashboardService(request.user)
+        data = service.get_device_breakdown()
+        return Response(data)
+    
+    @action(detail=False, methods=['get'], url_path='dashboard/browsers')
+    def dashboard_browsers(self, request):
+        """Get click counts by browser."""
+        service = DashboardService(request.user)
+        data = service.get_browser_breakdown()
+        return Response(data)
+    
+    @action(detail=False, methods=['get'], url_path='dashboard/os')
+    def dashboard_os(self, request):
+        """Get click counts by operating system."""
+        service = DashboardService(request.user)
+        data = service.get_os_breakdown()
+        return Response(data)
+    
+    @action(detail=False, methods=['get'], url_path='dashboard/referrers')
+    def dashboard_referrers(self, request):
+        """Get top referrer sources."""
+        limit = int(request.query_params.get('limit', 10))
+        service = DashboardService(request.user)
+        data = service.get_top_referrers(limit=limit)
+        return Response(ReferrerSerializer(data, many=True).data)
+    
+    @action(detail=False, methods=['get'], url_path='dashboard/recent-clicks')
+    def dashboard_recent_clicks(self, request):
+        """Get recent click activity feed."""
+        limit = int(request.query_params.get('limit', 20))
+        service = DashboardService(request.user)
+        data = service.get_recent_clicks(limit=limit)
+        return Response(RecentClickSerializer(data, many=True).data)
