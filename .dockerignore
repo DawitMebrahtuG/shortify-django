@@ -1,0 +1,26 @@
+.env
+.shortenv/
+Dockerfile
+docker-compose.yml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.cursor/
+*.swp
+
+# Logs & databases
+*.log
+db.sqlite3
+
+staticfiles/
+media/
