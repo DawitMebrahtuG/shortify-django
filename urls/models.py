@@ -26,8 +26,9 @@ class URL(models.Model):
         related_name='urls',
         null=True,
         blank=True,
+        db_index=True,
     )
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
     expires_at = models.DateTimeField(
         null=True, 
@@ -123,3 +124,32 @@ class Click(models.Model):
             device=device,
             os=os
         )
+
+
+class QRCode(models.Model):
+    """Stores QR codes"""
+    
+    url = models.ForeignKey(
+        URL,
+        on_delete=models.CASCADE,
+        related_name='qrcodes',
+        help_text="The URL this QR code points to"
+    )
+    name = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Optional name for this QR code"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    # Customization options
+    fill_color = models.CharField(max_length=7, default='#000000')
+    back_color = models.CharField(max_length=7, default='#FFFFFF')
+    box_size = models.PositiveIntegerField(default=10)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "QR Code"
+        verbose_name_plural = "QR Codes"
+    
+    def __str__(self):
+        return f"QR: {self.name or self.url.short_code}"
