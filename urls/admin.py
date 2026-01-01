@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.db.models import Count
-from .models import URL, Click
+from .models import URL, Click, QRCode
 
 
 class ClickInline(admin.TabularInline):
@@ -128,6 +128,14 @@ class ClickAdmin(admin.ModelAdmin):
         return obj.referrer
     referrer_truncated.short_description = 'Referrer'
 
+
+@admin.register(QRCode)
+class QRCodeAdmin(admin.ModelAdmin):
+    list_display = ['name', 'url', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['name', 'url__short_code']
+    readonly_fields = ['url', 'created_at', 'fill_color', 'back_color', 'box_size']
+    date_hierarchy = 'created_at'
 
 admin.site.site_header = "URL Shortener Administration"
 admin.site.site_title = "URL Shortener Admin"

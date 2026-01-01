@@ -4,12 +4,15 @@ from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db.models import Count
 from rest_framework import viewsets, status
+from rest_framework.views import APIView
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 import user_agents
-from urls.models import URL, Click
+
+from urls.models import URL, Click, QRCode
 from urls.serializers import (
     URLSerializer, 
     URLCreateSerializer, 
@@ -25,6 +28,7 @@ from urls.serializers import (
 from urls.services.qrcode import generate_qr_code
 from urls.services.analytics import get_url_analytics
 from urls.services.dashboard import DashboardService
+from urls.utils import paginate_queryset
 
 def get_client_ip(request):
     """Extract client IP address from request."""
@@ -93,6 +97,7 @@ def dashboard(request):
         context['clicks_over_time'], 
         cls=DjangoJSONEncoder
     )
+    context['active_page'] = 'dashboard'
 
     return render(request, 'urls/dashboard.html', context)
 
@@ -143,6 +148,78 @@ def shorten_url_api(request):
         }, 
         status=status.HTTP_400_BAD_REQUEST
     )
+
+
+@login_required
+def urls_list(request):
+    queryset = (
+        URL.objects
+        .filter(user=request.user)
+        .annotate(click_count=Count("clicks"))
+        .only("id", "original_url", "short_code", "created_at", "is_active")
+        .order_by("-created_at")
+    )
+
+    urls = paginate_queryset(request, queryset, per_page=5)
+
+    return render(
+        request,
+        "urls/url_list.html",
+        {
+            "urls": urls,
+            "active_page": "urls",
+        },
+    )
+
+
+@login_required
+def qrcodes_list(request):
+    queryset = (
+        QRCode.objects
+        .filter(url__user=request.user)
+        .select_related("url")
+        .only("id", "created_at", "url__id", "url__short_code")
+        .order_by("-created_at")
+    )
+
+    qrcodes = paginate_queryset(request, queryset, per_page=12)
+
+    user_urls = (
+        URL.objects
+        .filter(user=request.user, is_active=True)
+        .only("id", "short_code", "original_url")
+        .order_by("-created_at")[:50]
+    )
+
+    return render(
+        request,
+        "urls/qrcode_list.html",
+        {
+            "qrcodes": qrcodes,
+            "user_urls": user_urls,
+            "active_page": "qrcodes",
+        },
+    )
+
+
+class QRCodeCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        short_code = request.data.get('url_short_code')
+        name = request.data.get('name', '')
+        
+        try:
+            url = URL.objects.get(short_code=short_code, user=request.user)
+        except URL.DoesNotExist:
+            return Response({'detail': 'URL not found'}, status=404)
+        
+        qr = QRCode.objects.create(url=url, name=name)
+        return Response({
+            'id': qr.id,
+            'name': qr.name,
+            'short_code': url.short_code
+        }, status=201)
 
 
 class URLViewSet(viewsets.ModelViewSet):
