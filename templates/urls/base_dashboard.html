@@ -1,0 +1,59 @@
+{% extends 'urls/base.html' %}
+
+{% block extra_css %}
+{% block page_css %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">🔗 Shortify</div>
+        </div>
+        
+        <ul class="sidebar-nav">
+            <li>
+                <a href="{% url 'urls:dashboard' %}" class="{% if active_page == 'dashboard' %}active{% endif %}">
+                    <span class="icon">📊</span> Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'urls:url_list' %}" class="{% if active_page == 'urls' %}active{% endif %}">
+                    <span class="icon">🔗</span> My Links
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'urls:qrcodes_list' %}" class="{% if active_page == 'qrcodes' %}active{% endif %}">
+                    <span class="icon">📱</span> QR Codes
+                </a>
+            </li>
+            <li>
+                <a href="/api/docs/" target="_blank">
+                    <span class="icon">📚</span> API Docs
+                </a>
+            </li>
+        </ul>
+        
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="avatar">{{ user.username|slice:":1"|upper }}</div>
+                <span class="username">{{ user.username }}</span>
+            </div>
+            <a href="{% url 'urls:logout' %}" class="btn btn-secondary btn-sm" style="width: 100%; justify-content: center;">
+                Logout
+            </a>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        {% include 'urls/partials/messages.html' %}
+        {% block page_content %}{% endblock %}
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% block page_js %}{% endblock %}
+{% endblock %}

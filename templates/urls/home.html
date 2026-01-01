@@ -1,5 +1,5 @@
 {% extends 'urls/base.html' %}
-
+{% load static %}
 {% block title %}URL Shortener - Shorten Your Links{% endblock %}
 
 {% block extra_css %}
@@ -184,75 +184,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
-    document.getElementById('shortenForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const originalUrl = document.getElementById('original_url').value;
-        const expiresAt = document.getElementById('expires_at').value;
-        const errorDiv = document.getElementById('error');
-        const resultDiv = document.getElementById('result');
-        
-        errorDiv.textContent = '';
-        resultDiv.classList.remove('show');
-        
-        try {
-            const csrftoken = getCookie('csrftoken');
-            
-            const response = await fetch('/api/shorten/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken,
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify({
-                    original_url: originalUrl,
-                    expires_at: expiresAt || null
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                document.getElementById('shortUrlInput').value = data.short_url;
-                resultDiv.classList.add('show');
-            } else {
-                errorDiv.textContent = data.errors.original_url ? 
-                    data.errors.original_url[0] : 
-                    'Error creating short URL';
-            }
-        } catch (error) {
-            errorDiv.textContent = 'Network error. Please try again.';
-        }
-    });
-    
-    function copyToClipboard() {
-        const input = document.getElementById('shortUrlInput');
-        input.select();
-        document.execCommand('copy');
-        
-        const btn = event.target;
-        const originalText = btn.textContent;
-        btn.textContent = '✓ Copied!';
-        setTimeout(() => {
-            btn.textContent = originalText;
-        }, 2000);
-    }
-</script>
+<script src="{% static 'js/home.js' %}"></script>
 {% endblock %}
